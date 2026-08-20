@@ -1,0 +1,12 @@
+{
+  "cik": "0000789019",
+  "name": "MICROSOFT CORP",
+  "filings": {
+    "recent": {
+      "accessionNumber": ["0000789019-24-000012", "0000789019-24-000005"],
+      "form": ["10-K", "10-Q"],
+      "filingDate": ["2024-07-30", "2024-01-30"],
+      "primaryDocument": ["msft-20240630.htm", "msft-20231231.htm"]
+    }
+  }
+}

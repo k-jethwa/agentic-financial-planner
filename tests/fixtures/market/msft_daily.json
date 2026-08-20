@@ -1,0 +1,25 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {"currency": "USD", "symbol": "MSFT"},
+        "timestamp": [1704153600, 1704240000],
+        "indicators": {
+          "quote": [
+            {
+              "open": [370.5, 373.2],
+              "high": [374.0, 376.1],
+              "low": [369.1, 372.0],
+              "close": [373.9, 375.0],
+              "volume": [21500000, 19800000]
+            }
+          ],
+          "adjclose": [
+            {"adjclose": [373.9, 375.0]}
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}
