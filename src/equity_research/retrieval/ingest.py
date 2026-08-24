@@ -115,12 +115,13 @@ def normalize_html_to_sections(html: str) -> list[FilingSection]:
         name = getattr(element, "name", None)
         if name in _HEADING_TAGS:
             flush()
-            heading = element.get_text(strip=True) or heading
+            heading = " ".join(element.get_text(" ", strip=True).split()) or heading
             parts = []
         elif (
             name is None
             and (parent := element.parent) is not None
             and parent.name not in _SKIP_PARENTS
+            and not _is_inside_heading(element)
         ):
             stripped = str(element).strip()
             if stripped:
@@ -132,6 +133,23 @@ def normalize_html_to_sections(html: str) -> list[FilingSection]:
         if text:
             sections = [FilingSection(heading="Document", text=text)]
     return sections
+
+
+def _is_inside_heading(element) -> bool:
+    """True if `element` is a descendant of a heading tag.
+
+    A heading tag's own text (e.g. the "Item 1A. Risk Factors" inside an
+    `<h1>`) must become that section's `heading`, never leak into its body
+    text — including when the heading text is wrapped in inline tags like
+    `<span>`/`<b>`, which `BeautifulSoup.descendants` still walks into.
+    """
+    for ancestor in element.parents:
+        ancestor_name = getattr(ancestor, "name", None)
+        if ancestor_name in _HEADING_TAGS:
+            return True
+        if ancestor_name == "body":
+            break
+    return False
 
 
 class FilingIngestor:

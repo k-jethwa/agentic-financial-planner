@@ -158,6 +158,15 @@ def test_full_run_reaches_critic_with_evidence_from_every_branch():
     assert "revenue_growth_yoy" in metric_names
     assert "valuation" in result["analyses"]
 
+    report_payload = result["report"]["json"]
+    assert "not investment advice" in report_payload["disclaimer"].lower()
+    assert report_payload["sources"]
+    claim_groups = ("bull_thesis", "bear_thesis", "risks", "catalysts")
+    assert all(
+        claim["evidence_ids"] for group in claim_groups for claim in report_payload[group]
+    )
+    assert "not investment advice" in result["report"]["markdown"].lower()
+
 
 def test_unsupported_ticker_routes_straight_to_critic():
     graph = build_research_graph(_build_deps(resolves=False))
@@ -169,6 +178,7 @@ def test_unsupported_ticker_routes_straight_to_critic():
     assert result["trace"][-1].status == "failed"
     assert any(error.fatal for error in result["errors"])
     assert result["evidence"] == []
+    assert result.get("report") is None  # no evidence to synthesize a report from
 
 
 def test_missing_filing_html_is_recorded_but_does_not_stop_the_run():
