@@ -21,6 +21,20 @@ def test_latest_annual_fact_ignores_quarterly_observations(load_fixture, fixture
     assert fact.fiscal_period == "FY"
 
 
+def test_annual_facts_returns_most_recent_first(load_fixture, fixture_http):
+    client = SecClient(http=fixture_http(load_fixture("sec/companyfacts_msft.json")))
+    facts = client.annual_facts("0000789019", "Revenues", limit=2)
+    assert [f.fiscal_year for f in facts] == [2024, 2023]
+    assert facts[1].value == 211915000000
+
+
+def test_annual_facts_limit_one_matches_latest_annual_fact(load_fixture, fixture_http):
+    client = SecClient(http=fixture_http(load_fixture("sec/companyfacts_msft.json")))
+    assert client.annual_facts("0000789019", "Revenues", limit=1) == [
+        client.latest_annual_fact("0000789019", "Revenues")
+    ]
+
+
 def test_latest_annual_fact_raises_for_missing_tag(load_fixture, fixture_http):
     client = SecClient(http=fixture_http(load_fixture("sec/companyfacts_msft.json")))
     with pytest.raises(RequiredSourceUnavailableError):
