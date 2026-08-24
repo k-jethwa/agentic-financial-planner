@@ -156,6 +156,16 @@ class SecClient:
         return filings
 
     def latest_annual_fact(self, cik: str, tag: str, taxonomy: str = "us-gaap") -> NormalizedFact:
+        return self.annual_facts(cik, tag, taxonomy, limit=1)[0]
+
+    def annual_facts(
+        self, cik: str, tag: str, taxonomy: str = "us-gaap", *, limit: int = 1
+    ) -> list[NormalizedFact]:
+        """The `limit` most recent annual (10-K/FY) observations, newest first.
+
+        Used, e.g., to pull both the current and prior fiscal year's revenue
+        for a year-over-year growth calculation.
+        """
         facts = self.company_facts(cik)
         try:
             tag_data = facts["facts"][taxonomy][tag]
@@ -175,17 +185,20 @@ class SecClient:
                 f"companyfacts:{cik}", f"no annual (10-K/FY) observation for {taxonomy}:{tag}"
             )
 
-        unit, entry = max(candidates, key=lambda pair: pair[1]["fy"])
-        return NormalizedFact(
-            tag=tag,
-            taxonomy=taxonomy,
-            unit=unit,
-            value=Decimal(str(entry["val"])),
-            fiscal_year=entry["fy"],
-            fiscal_period=entry["fp"],
-            period_start=date.fromisoformat(entry["start"]) if entry.get("start") else None,
-            period_end=date.fromisoformat(entry["end"]),
-            accession=entry["accn"],
-            filed=date.fromisoformat(entry["filed"]),
-            form=entry["form"],
-        )
+        ranked = sorted(candidates, key=lambda pair: pair[1]["fy"], reverse=True)
+        return [
+            NormalizedFact(
+                tag=tag,
+                taxonomy=taxonomy,
+                unit=unit,
+                value=Decimal(str(entry["val"])),
+                fiscal_year=entry["fy"],
+                fiscal_period=entry["fp"],
+                period_start=date.fromisoformat(entry["start"]) if entry.get("start") else None,
+                period_end=date.fromisoformat(entry["end"]),
+                accession=entry["accn"],
+                filed=date.fromisoformat(entry["filed"]),
+                form=entry["form"],
+            )
+            for unit, entry in ranked[:limit]
+        ]
