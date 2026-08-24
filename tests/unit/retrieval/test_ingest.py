@@ -83,6 +83,31 @@ def test_chunks_falls_back_to_document_section_without_headings():
     assert chunks[0].metadata["locator"] == "Document"
 
 
+def test_chunk_text_never_repeats_its_own_heading():
+    # Regression: BeautifulSoup.descendants walks *into* a heading tag right
+    # after yielding it, so the heading's own text (even wrapped in inline
+    # tags) must never leak into the section body it introduces.
+    fetched = FetchedFiling(
+        filing=Filing(
+            accession="acc-3",
+            form="10-K",
+            filing_date=date(2024, 1, 1),
+            url="https://example.com/h.htm",
+        ),
+        html=(
+            "<html><body>"
+            "<h1><b>Item 1A.</b> Risk Factors</h1>"
+            "<p>Supply chain disruption is a risk.</p>"
+            "</body></html>"
+        ),
+        ticker="TEST",
+        cik="0000000001",
+    )
+    chunks = FilingIngestor(splitter=FixedSplitter(1000)).chunks(fetched)
+    assert chunks[0].metadata["locator"] == "Item 1A. Risk Factors"
+    assert chunks[0].text == "Supply chain disruption is a risk."
+
+
 def test_ingest_upserts_into_vector_store_and_returns_chunk_count():
     store = InMemoryVectorStore()
     ingestor = FilingIngestor(splitter=FixedSplitter(1000), vector_store=store)
