@@ -22,6 +22,10 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        # Lets tests build `Settings(test_mode=True)` by field name, not just
+        # by its env-var alias (`EQUITY_RESEARCH_TEST_MODE=...`); env-file
+        # and environment loading still resolve through the alias as usual.
+        populate_by_name=True,
     )
 
     # --- Secrets (env-only; see .env.example) ---
