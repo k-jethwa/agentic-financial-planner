@@ -12,6 +12,7 @@ from pathlib import Path
 
 from sqlalchemy import ForeignKey, Integer, String, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 
 class Base(DeclarativeBase):
@@ -45,14 +46,26 @@ class TraceEventORM(Base):
 
 
 def create_sqlite_engine(db_path: str | Path = ":memory:", *, echo: bool = False):
-    """Create a SQLite engine. `:memory:` is used throughout the test suite."""
+    """Create a SQLite engine. `:memory:` is used throughout the test suite.
+
+    A plain `sqlite:///:memory:` engine hands out a *fresh, empty* database
+    on every new connection by default -- fine for a single long-lived
+    `session` fixture, but silently loses all data the moment a second
+    connection is opened (e.g. one request-scoped session per API call).
+    `StaticPool` pins every checkout to the same single connection so an
+    in-memory engine behaves like one shared database for the process.
+    """
     if str(db_path) == ":memory:":
-        url = "sqlite:///:memory:"
-    else:
-        path = Path(db_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        url = f"sqlite:///{path}"
-    return create_engine(url, echo=echo, future=True)
+        return create_engine(
+            "sqlite:///:memory:",
+            echo=echo,
+            future=True,
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+        )
+    path = Path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return create_engine(f"sqlite:///{path}", echo=echo, future=True)
 
 
 def init_db(engine) -> None:
