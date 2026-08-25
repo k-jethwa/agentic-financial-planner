@@ -14,6 +14,8 @@ dependencies = [
     "langchain-core>=0.3",
     "langchain-groq>=0.2",
     "feedparser>=6.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
 ]
 
 [project.optional-dependencies]
@@ -21,10 +23,13 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.5",
 ]
+ui = [
+    "streamlit>=1.30",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 
 [tool.ruff]
 line-length = 100
