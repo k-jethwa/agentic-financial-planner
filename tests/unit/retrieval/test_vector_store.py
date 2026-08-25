@@ -42,3 +42,20 @@ def test_query_with_no_overlap_returns_empty():
     store = InMemoryVectorStore()
     store.upsert([_record("a1", "MSFT", "cloud revenue grew")])
     assert store.query("MSFT", "zzz unrelated qqq", top_k=5) == []
+
+
+def test_query_matches_against_the_section_heading_too():
+    # A chunk's heading (e.g. "Item 1A. Risk Factors") carries strong topical
+    # signal a query may share even when the body text does not repeat it.
+    store = InMemoryVectorStore()
+    store.upsert(
+        [
+            VectorRecord(
+                chunk_id="a1",
+                text="Supply chain disruption could materially affect delivery timelines.",
+                metadata={"ticker": "MSFT", "locator": "Item 1A. Risk Factors"},
+            )
+        ]
+    )
+    results = store.query("MSFT", "risk factors", top_k=5)
+    assert [hit.record.chunk_id for hit in results] == ["a1"]

@@ -58,10 +58,18 @@ class InMemoryVectorStore:
             ScoredRecord(record=record, score=score)
             for record in self._records.values()
             if record.metadata.get("ticker") == ticker
-            if (score := _overlap_score(query_terms, _tokenize(record.text))) > 0
+            if (score := _overlap_score(query_terms, _searchable_terms(record))) > 0
         ]
         scored.sort(key=lambda hit: hit.score, reverse=True)
         return scored[:top_k]
+
+
+def _searchable_terms(record: VectorRecord) -> set[str]:
+    # A chunk's section heading (e.g. "Item 1A. Risk Factors") carries strong
+    # topical signal that its body text alone may not repeat, so it counts
+    # toward matching too.
+    locator = record.metadata.get("locator", "")
+    return _tokenize(record.text) | _tokenize(locator)
 
 
 def _tokenize(text: str) -> set[str]:

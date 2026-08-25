@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local runtime data: SQLite DB and on-disk HTTP cache (raw documents must
+# never live in Git, per design spec).
+/data/
+
+# Generated evaluation output (regenerate with `python evals/run_evals.py`)
+evals/results.json

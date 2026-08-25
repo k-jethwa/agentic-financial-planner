@@ -1,0 +1,40 @@
+name: CI
+
+# No job in this workflow ever needs GROQ_API_KEY, PINECONE_API_KEY, or
+# SEC_USER_AGENT: every test and eval case runs against fakes/fixtures
+# (tests/support, tests/fixtures), never a live network call or a secret,
+# per the project's design spec.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests evals
+
+      - name: Unit and integration tests
+        run: pytest -q
+
+      - name: Recorded evaluation suite
+        run: python evals/run_evals.py --recorded
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results.json
