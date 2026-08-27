@@ -1,11 +1,5 @@
 # Agentic Public Equity Research Assistant
 
-> **Research and educational use only — not investment advice.** This
-> project produces structured, source-cited research memos for US-listed
-> common stocks. It never executes trades, connects to a brokerage,
-> recommends a position size, states an expected return, or presents
-> output as personalized investment advice.
-
 A personal, portfolio-grade project: a ticker + a question go in, and a
 reproducible Markdown/JSON research memo comes out, with every material
 claim traceable to a specific SEC filing, XBRL fact, price observation, or
